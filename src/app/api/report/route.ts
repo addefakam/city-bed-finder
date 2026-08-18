@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, ensureReportTable } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
+    await ensureReportTable();
+
     const body = await request.json();
     const { providerId, providerName, reporterName, reporterPhone, issue, description } = body;
 
@@ -13,18 +15,20 @@ export async function POST(request: Request) {
       );
     }
 
-    const report = await prisma.guestReport.create({
-      data: {
-        providerId,
-        providerName: providerName || "",
-        reporterName: reporterName || "",
-        reporterPhone: reporterPhone || "",
-        issue,
-        description: description || "",
-      },
-    });
+    // Use raw SQL to avoid Prisma model mismatch with shared DB
+    const result = await prisma.$queryRawUnsafe(
+      `INSERT INTO "GuestReport" ("id", "providerId", "providerName", "reporterName", "reporterPhone", "issue", "description")
+       VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5, $6) RETURNING "id"`,
+      providerId,
+      providerName || "",
+      reporterName || "",
+      reporterPhone || "",
+      issue,
+      description || ""
+    );
 
-    return NextResponse.json({ success: true, id: report.id });
+    const row = result as { id: string }[];
+    return NextResponse.json({ success: true, id: row[0]?.id });
   } catch (error) {
     console.error("Report API error:", error);
     return NextResponse.json(

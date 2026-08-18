@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, ensureReportTable } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
+    // Ensure GuestReport table exists on first cold start
+    await ensureReportTable();
+
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") || "";
     const roomType = searchParams.get("roomType") || "";

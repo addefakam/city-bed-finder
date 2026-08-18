@@ -7,6 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Read-only models — mirrors the main GHMS schema.
+// The guest app only reads Provider, Room, and Settings.
+// GuestReport is created via raw SQL (see src/lib/prisma.ts).
+
 enum ProviderStatus {
   PENDING
   APPROVED
@@ -44,9 +48,8 @@ model Provider {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
-  rooms     Room[]
-  settings  GuestAppSettings?
-  reports   GuestReport[]
+  rooms    Room[]
+  settings Settings?
 
   @@index([status])
 }
@@ -68,38 +71,22 @@ model Room {
 
   provider Provider @relation(fields: [providerId], references: [id])
 
+  @@unique([number, providerId])
   @@index([providerId])
   @@index([status])
 }
 
-model GuestAppSettings {
-  id             String   @id @default(cuid())
-  guestHouseName String   @default("Guest House")
-  address        String   @default("")
-  phone          String   @default("")
-  checkInTime    String   @default("14:00")
-  checkOutTime   String   @default("12:00")
-  currency       String   @default("ETB")
-  providerId     String   @unique
-  provider       Provider @relation(fields: [providerId], references: [id])
+model Settings {
+  id              String   @id @default(cuid())
+  guestHouseName  String   @default("Guest House")
+  address         String   @default("")
+  phone           String   @default("")
+  email           String   @default("")
+  currency        String   @default("ETB")
+  checkInTime     String   @default("14:00")
+  checkOutTime    String   @default("12:00")
+  providerId      String?  @unique
+  provider        Provider? @relation(fields: [providerId], references: [id])
 
   @@index([providerId])
-}
-
-model GuestReport {
-  id          String   @id @default(cuid())
-  providerId  String
-  providerName String  @default("")
-  reporterName String  @default("")
-  reporterPhone String @default("")
-  issue       String
-  description String  @default("")
-  resolved    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-
-  provider Provider @relation(fields: [providerId], references: [id])
-
-  @@index([providerId])
-  @@index([resolved])
-  @@index([createdAt])
 }

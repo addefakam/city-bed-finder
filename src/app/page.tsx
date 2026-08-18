@@ -84,7 +84,7 @@ const ROOM_TYPE_LABELS: Record<string, string> = {
   DELUXE: "Deluxe",
 };
 
-const POLICE_PHONE = "0913169652";
+const POLICE_PHONE = "0917702996";
 const ISSUES = [
   "Hiding available rooms",
   "Overcharging",

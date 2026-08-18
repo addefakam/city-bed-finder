@@ -1,0 +1,11 @@
+{
+  "name": "City Bed Finder",
+  "short_name": "BedFinder",
+  "description": "Check real room availability across the city",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1e40af",
+  "orientation": "portrait",
+  "icons": []
+}

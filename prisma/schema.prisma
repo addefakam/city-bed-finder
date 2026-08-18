@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProviderStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+enum RoomType {
+  SINGLE
+  DOUBLE
+  TWIN
+  SUITE
+  DELUXE
+}
+
+enum RoomStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+  RESERVED
+}
+
+model Provider {
+  id          String         @id @default(cuid())
+  name        String
+  ownerName   String
+  phone       String
+  email       String         @default("")
+  address     String         @default("")
+  type        String         @default("GUEST_HOUSE")
+  licenseNo   String         @default("")
+  status      ProviderStatus @default(PENDING)
+  latitude    Float          @default(9.02)
+  longitude   Float          @default(38.75)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  rooms     Room[]
+  settings  GuestAppSettings?
+  reports   GuestReport[]
+
+  @@index([status])
+}
+
+model Room {
+  id            String     @id @default(cuid())
+  number        String
+  name          String
+  type          RoomType
+  pricePerNight Float
+  floor         Int
+  capacity      Int
+  status        RoomStatus @default(AVAILABLE)
+  amenities     String
+  description   String
+  providerId    String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  provider Provider @relation(fields: [providerId], references: [id])
+
+  @@index([providerId])
+  @@index([status])
+}
+
+model GuestAppSettings {
+  id             String   @id @default(cuid())
+  guestHouseName String   @default("Guest House")
+  address        String   @default("")
+  phone          String   @default("")
+  checkInTime    String   @default("14:00")
+  checkOutTime   String   @default("12:00")
+  currency       String   @default("ETB")
+  providerId     String   @unique
+  provider       Provider @relation(fields: [providerId], references: [id])
+
+  @@index([providerId])
+}
+
+model GuestReport {
+  id          String   @id @default(cuid())
+  providerId  String
+  providerName String  @default("")
+  reporterName String  @default("")
+  reporterPhone String @default("")
+  issue       String
+  description String  @default("")
+  resolved    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  provider Provider @relation(fields: [providerId], references: [id])
+
+  @@index([providerId])
+  @@index([resolved])
+  @@index([createdAt])
+}
